@@ -19,7 +19,7 @@ class Annotation:
     if type_ not in (str, int, float, complex, bool):
       raise TypeError(f"'{type_.__name__}' is not applicable type.")
     if type_ is bool and positional:
-      raise TypeError("switch args can't be positional args.")
+      raise TypeError("switch arg can't be a positional arg.")
     self.type = type_
     self.desc = desc
     self.allow_multiple = allow_multiple
