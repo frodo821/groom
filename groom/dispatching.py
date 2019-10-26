@@ -17,7 +17,7 @@ def to_param_name(name):
   return f"--{name.lower().replace('_', '-')}"
 
 def get_program_name():
-  p = sys.argv[0]
+  p = __package__ or sys.argv[0]
   return basename(p)
 
 class Dispatcher:
