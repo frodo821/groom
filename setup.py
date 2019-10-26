@@ -14,7 +14,7 @@ except IOError:
   readme = ""
 
 here = dirname(abspath(__file__))
-version = '0.0.1a2'
+version = '0.0.2a1'
 
 setup(
   name="groom",
