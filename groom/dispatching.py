@@ -133,17 +133,26 @@ class Dispatcher:
       else:
         params[n] = v
       idx += 2
-    for name, param in self.keywords.values():
-      if param.required and name not in params:
-        print((
-          f"required parameter '{arg}' was not specified.\n"
-          "please try execute this command with '-h' or '--help' to get helps."),
-          file=sys.stderr)
-        sys.exit(-1)
-      if param.type is bool and name not in params:
-        params[name] = False
-        continue
+    for name, param in self.positionals:
       if name not in params:
+        if param.required:
+          print((
+            f"some of required positional parameter was not specified.\n"
+            "please try execute this command with '-h' or '--help' to get helps."),
+            file=sys.stderr)
+          sys.exit(-1)
+        params[name] = self.defaults[name]
+    for name, param in self.keywords.values():
+      if name not in params:
+        if param.required:
+          print((
+            f"required parameter '{to_param_name(name)}' was not specified.\n"
+            "please try execute this command with '-h' or '--help' to get helps."),
+            file=sys.stderr)
+          sys.exit(-1)
+        if param.type is bool:
+          params[name] = False
+          continue
         params[name] = self.defaults[name]
     self.func(**params)
 
