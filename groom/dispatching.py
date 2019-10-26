@@ -11,6 +11,8 @@ from os.path import basename
 from inspect import signature as sig, Parameter
 from .annotations import Annotation
 
+__all__ = ["Dispatcher"]
+
 def to_param_name(name):
   return f"--{name.lower().replace('_', '-')}"
 
@@ -19,6 +21,14 @@ def get_program_name():
   return basename(p)
 
 class Dispatcher:
+  """
+  Dispatches command-line call to python function call.
+
+  Parameters:
+
+  * func: a function to call
+  * desc: tool description
+  """
   def __init__(self, func=None, desc=None, *, is_subcommand=False):
     self.func = func
     self.desc = desc
@@ -45,6 +55,9 @@ class Dispatcher:
     self.positionals.sort(key=lambda x: not x[1].required)
 
   def dispatch(self):
+    """
+    Dispatches command-line call to python function call.
+    """
     params = {}
     pos = iter(self.positionals)
     pac = 0
@@ -135,6 +148,9 @@ class Dispatcher:
     self.func(**params)
 
   def helpmsg(self):
+    """
+    Generate help message
+    """
     import __main__ as m
     pn = get_program_name()
     ret = [
@@ -181,5 +197,8 @@ class Dispatcher:
       return '\n'.join(ret)
 
   def add_subcommand(self, name, dispatcher):
+    """
+    Add a dispatcher as a sub-command.
+    """
     dispatcher.is_subcommand = True
     self.subdisps[name] = dispather
