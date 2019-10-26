@@ -14,7 +14,7 @@ except IOError:
   readme = ""
 
 here = dirname(abspath(__file__))
-version = '0.0.1a1'
+version = '0.0.1a2'
 
 setup(
   name="groom",
@@ -33,6 +33,7 @@ setup(
     'Programming Language :: Python :: 3',
     'Programming Language :: Python :: 3.6',
     'Programming Language :: Python :: 3.7',
+    'Programming Language :: Python :: 3.8',
     'License :: OSI Approved :: MIT License',
     'Development Status :: 3 - Alpha',
     'Topic :: Utilities',
