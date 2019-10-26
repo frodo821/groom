@@ -43,6 +43,11 @@ class DispatcherTest(unittest.TestCase):
     sys.argv = [sys.argv[0], '2']
     self.disp.dispatch()
 
+  def test_required_positional_not_specify(self):
+    sys.argv = [sys.argv[0]]
+    with self.assertRaises(SystemExit):
+      self.disp.dispatch()
+
   def test_keyword_switch(self):
     sys.argv = [sys.argv[0], '2', '--second-arg']
     self.disp.dispatch()
