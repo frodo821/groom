@@ -16,3 +16,5 @@ __all__ = [
   "multiple", "required",
   "switch", "Dispatcher"
 ]
+
+__version__ = "0.0.2a2"
