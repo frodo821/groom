@@ -1,4 +1,5 @@
 # encoding: utf-8
+# pylint: disable = redefined-outer-name, redefined-builtin
 """
 annotations.py
 
@@ -7,6 +8,9 @@ Copyright (c) 2019 Frodo. All rights reserved.
 """
 
 class Annotation:
+  """
+  class to annotate function parameters
+  """
   def __init__(
       self, type_, desc='', *,
       allow_multiple=False,
@@ -27,6 +31,33 @@ class Annotation:
     self.short_name = short_name
     self.required = required
     self.var_name = var_name
+
+  def display(self, arg: str, name: str):
+    """
+    generate human-readable parameter expression
+    """
+    disp = []
+    if self.type is not bool:
+      vn = self.var_name or name.upper()
+      disp.append(f"{arg} <{vn}>")
+      if self.short_name:
+        disp.append(f" | -{self.short_name} <{vn}>")
+      if self.allow_multiple:
+        if disp[1:]:
+          disp.insert(1, f" [{arg} <{vn}>...]")
+          disp.append(f" [-{self.short_name} <{vn}>...]")
+        else:
+          disp.append(f" [{arg} <{vn}>...]")
+      if not self.required:
+        disp.insert(0, "[")
+        disp.append("]")
+    else:
+      disp.append(f"{arg}")
+      if self.short_name:
+        disp.append(f" | -{self.short_name}")
+        disp.insert(0, "(")
+        disp.append(")")
+    return "".join(disp)
 
 def positional(type, desc='', *, required=False, var_name=None):
   """
