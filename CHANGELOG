@@ -1,1 +1,15 @@
-0.0.1a1: initial release
+0.0.3a1:
+  * improve automatic help message generation
+  * refactor codes
+
+0.0.2a2:
+  * fix command name resolution bug
+
+0.0.2a1:
+  * changed how to resolve command name
+
+0.0.1a2:
+  * bug fix
+
+0.0.1a1:
+  * initial release

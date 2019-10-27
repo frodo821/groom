@@ -17,4 +17,4 @@ __all__ = [
   "switch", "Dispatcher"
 ]
 
-__version__ = "0.0.2a2"
+__version__ = "0.0.3a1"
