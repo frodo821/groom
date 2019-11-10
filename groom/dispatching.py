@@ -201,7 +201,7 @@ class Dispatcher:
         ret.append(f"  {pn} subcommand params...")
         ret.append("")
       ret.append("subcommands:")
-      for sn, sc in self.subdisps:
+      for sn, sc in self.subdisps.items():
         ret.append(f"{sn}:")
         ret.append(sc.helpmsg().replace('\n', '\n  '))
     else:
