@@ -234,4 +234,4 @@ class Dispatcher:
     Add a dispatcher as a sub-command.
     """
     dispatcher.is_subcommand = True
-    self.subdisps[name] = dispather
+    self.subdisps[name] = dispatcher
