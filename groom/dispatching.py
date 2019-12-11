@@ -204,8 +204,9 @@ class Dispatcher:
       for sn, sc in self.subdisps.items():
         ret.append(f"{sn}:")
         ret.append(sc.helpmsg().replace('\n', '\n  '))
-    else:
-      ret.append(self.__generate_usage(pn))
+    ret.append(self.__generate_usage(pn))
+
+    if self.positionals:
       ret.append("")
       ret.append("positional parameters:")
       for n, p in self.positionals:
@@ -215,6 +216,8 @@ class Dispatcher:
         ret.append(f"  required: {p.required}")
         if not p.required:
           ret.append(f"  default: {self.defaults[n]}")
+
+    if self.keywords:
       ret.append("")
       ret.append("parameters:")
       for word, (n, p) in self.keywords.items():
@@ -227,7 +230,7 @@ class Dispatcher:
         ret.append(f"  multiple values: {p.allow_multiple}")
         if not p.required:
           ret.append(f"  default: {self.defaults[n]}")
-      return '\n'.join(ret)
+    return '\n'.join(ret)
 
   def add_subcommand(self, name, dispatcher):
     """
