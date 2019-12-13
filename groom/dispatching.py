@@ -169,7 +169,7 @@ class Dispatcher:
     self.__post_validate(params)
     self.func(**params)
 
-  def __generate_usage(self, name):
+  def __generate_usage(self, name, sub_names=[]):
     ret = []
     ps = []
     for n, p in self.positionals:
@@ -178,16 +178,19 @@ class Dispatcher:
     for arg, (n, p) in filter(lambda x: x[0].startswith('--'), self.keywords.items()):
       ret.append(f"    {p.display(arg, n)}")
     args = '\n'.join(ret).strip()
-    return f"  {name} {args}"
+    sn = ' '.join(sub_names)
+    return f"  {name}{f' {sn}' if self.is_subcommand else ''} {args}"
 
-  def helpmsg(self):
+  def helpmsg(self, sub_names=[]):
     """
     generate help message
     """
     import __main__ as m
     pn = _get_program_name()
     ret = [
-      self.desc
+      "",
+      self.desc,
+      ""
     ] if self.is_subcommand else [
       f"{pn}: {getattr(m, '__version__', 'UNVERSIONED')}",
       "",
@@ -196,15 +199,8 @@ class Dispatcher:
       "Usage:",
       f"  {pn} [-v | --version | -h | --help]"
     ]
-    if self.subdisps:
-      if not self.is_subcommand:
-        ret.append(f"  {pn} subcommand params...")
-        ret.append("")
-      ret.append("subcommands:")
-      for sn, sc in self.subdisps.items():
-        ret.append(f"{sn}:")
-        ret.append(sc.helpmsg().replace('\n', '\n  '))
-    ret.append(self.__generate_usage(pn))
+    ret.append(self.__generate_usage(pn, sub_names))
+    ret.append("")
 
     if self.positionals:
       ret.append("")
@@ -230,6 +226,17 @@ class Dispatcher:
         ret.append(f"  multiple values: {p.allow_multiple}")
         if not p.required:
           ret.append(f"  default: {self.defaults[n]}")
+
+    if self.subdisps:
+      if not self.is_subcommand:
+        ret.append(f"  {pn} subcommand params...")
+        ret.append("")
+      ret.append("subcommands:")
+      for sn, sc in self.subdisps.items():
+        ret.append("")
+        ret.append(f"{sn}:")
+        ret.append(sc.helpmsg(sub_names=sub_names + [sn]).replace('\n', '\n  '))
+
     return '\n'.join(ret)
 
   def add_subcommand(self, name, dispatcher):
