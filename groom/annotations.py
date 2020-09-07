@@ -7,6 +7,8 @@ Created by Frodo on 10/26/19.
 Copyright (c) 2019 Frodo. All rights reserved.
 """
 
+from typing import TYPE_CHECKING
+
 class Annotation:
   """
   class to annotate function parameters
@@ -59,49 +61,84 @@ class Annotation:
         disp.append(")")
     return "".join(disp)
 
-def positional(type, desc='', *, required=False, var_name=None):
-  """
-  Annotation for positional arguments.
-  """
-  return Annotation(
-    type, desc,
-    positional=True,
-    required=required,
-    var_name=var_name)
+if TYPE_CHECKING:
+  from typing import Type, List, TypeVar
 
-def optional(type, desc='', *, var_name=None, short_name=None):
-  """
-  Annotation for keyword-only optional arguments.
-  """
-  return Annotation(
-    type, desc,
-    var_name=var_name,
-    short_name=short_name)
+  T = TypeVar('T')
 
-def multiple(type, desc='', *, required=False, var_name=None, short_name=None):
-  """
-  Annotation for keyword-only list arguments.
-  """
-  return Annotation(
-    type, desc,
-    allow_multiple=True,
-    required=required,
-    var_name=var_name,
-    short_name=short_name)
+  def positional(type: Type[T], desc='', *, required=False, var_name=None) -> Type[T]:
+    """
+    Annotation for positional arguments.
+    """
+    return type
 
-def required(type, desc='', *, var_name=None, short_name=None):
-  """
-  Annotation for keyword-only required arguments.
-  """
-  return Annotation(
-    type, desc,
-    required=True,
-    var_name=var_name,
-    short_name=short_name)
+  def optional(type: Type[T], desc='', *, var_name=None, short_name=None) -> Type[T]:
+    """
+    Annotation for keyword-only optional arguments.
+    """
+    return type
 
-def switch(desc='', *, short_name=None):
-  """
-  Annotation for switch arguments.
-  """
-  return Annotation(
-    bool, desc, short_name=short_name)
+  def multiple(type: Type[T], desc='', *, required=False, var_name=None, short_name=None) -> Type[List[T]]:
+    """
+    Annotation for keyword-only list arguments.
+    """
+    return List[T]
+
+  def required(type: Type[T], desc='', *, var_name=None, short_name=None) -> Type[T]:
+    """
+    Annotation for keyword-only required arguments.
+    """
+    return type
+
+  def switch(desc='', *, short_name=None) -> Type[bool]:
+    """
+    Annotation for switch arguments.
+    """
+    return bool
+else:
+  def positional(type, desc='', *, required=False, var_name=None):
+    """
+    Annotation for positional arguments.
+    """
+    return Annotation(
+      type, desc,
+      positional=True,
+      required=required,
+      var_name=var_name)
+
+  def optional(type, desc='', *, var_name=None, short_name=None):
+    """
+    Annotation for keyword-only optional arguments.
+    """
+    return Annotation(
+      type, desc,
+      var_name=var_name,
+      short_name=short_name)
+
+  def multiple(type, desc='', *, required=False, var_name=None, short_name=None):
+    """
+    Annotation for keyword-only list arguments.
+    """
+    return Annotation(
+      type, desc,
+      allow_multiple=True,
+      required=required,
+      var_name=var_name,
+      short_name=short_name)
+
+  def required(type, desc='', *, var_name=None, short_name=None):
+    """
+    Annotation for keyword-only required arguments.
+    """
+    return Annotation(
+      type, desc,
+      required=True,
+      var_name=var_name,
+      short_name=short_name)
+
+  def switch(desc='', *, short_name=None):
+    """
+    Annotation for switch arguments.
+    """
+    return Annotation(
+      bool, desc, short_name=short_name)

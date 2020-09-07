@@ -7,14 +7,14 @@ Copyright (c) 2019 Frodo. All rights reserved.
 """
 
 from .annotations import (
-  positional, optional,
-  multiple, required, switch)
+    positional, optional,
+    multiple, required, switch)
 from .dispatching import Dispatcher
 
 __all__ = [
-  "positional", "optional",
-  "multiple", "required",
-  "switch", "Dispatcher"
+    "positional", "optional",
+    "multiple", "required",
+    "switch", "Dispatcher"
 ]
 
 __version__ = "0.0.4a1"

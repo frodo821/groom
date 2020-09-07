@@ -15,17 +15,24 @@ from .annotations import Annotation
 
 __all__ = ["Dispatcher"]
 
-_Param = Union[str, float, int, complex, bool]
+_Param = Union[str, float, int, complex, bool, None]
+_AnnotationPair = Tuple[str, Annotation]
+
 
 def _to_param_name(name):
   return f"--{name.lower().replace('_', '-')}"
+
 
 def _get_program_name():
   from __main__ import __package__ as pkg
   p = pkg or sys.argv[0]
   return basename(p)
 
-def _generate_disp_info(func) -> Tuple[Dict[str, _Param], Dict[str, Annotation], List[Annotation]]:
+
+def _generate_disp_info(func) -> Tuple[Dict[str, _Param], Dict[str, _AnnotationPair], List[_AnnotationPair]]:
+  defaults: Dict[str, _Param]
+  keywords: Dict[str, _AnnotationPair]
+  positionals: List[_AnnotationPair]
   defaults, keywords, positionals = {}, {}, []
   for n, p in sig(func).parameters.items():
     ann = p.annotation
@@ -37,11 +44,12 @@ def _generate_disp_info(func) -> Tuple[Dict[str, _Param], Dict[str, Annotation],
     if ann.positional:
       positionals.append((n, ann))
       continue
-    keywords[_to_param_name(n)] = n, ann
+    keywords[_to_param_name(n)] = (n, ann)
     if ann.short_name:
-      keywords[f"-{ann.short_name}"] = n, ann
+      keywords[f"-{ann.short_name}"] = (n, ann)
   positionals.sort(key=lambda x: not x[1].required)
   return defaults, keywords, positionals
+
 
 class Dispatcher:
   """
@@ -52,9 +60,10 @@ class Dispatcher:
   * func: a function to call
   * desc: tool description
   """
-  positionals: List[Annotation]
-  keywords: Dict[str, Annotation]
+  positionals: List[_AnnotationPair]
+  keywords: Dict[str, _AnnotationPair]
   defaults: Dict[str, _Param]
+  subdisps: dict
 
   def __init__(self, func=None, desc: str = None, *, is_subcommand: bool = False):
     self.func = func
@@ -121,6 +130,9 @@ class Dispatcher:
           continue
         params[name] = self.defaults[name]
 
+  def __call__(self):
+    self.dispatch()
+
   def dispatch(self):
     """
     Dispatches command-line call to python function call.
@@ -157,9 +169,9 @@ class Dispatcher:
         sys.exit(-1)
       except ValueError:
         print(
-          (f"invalid literal '{arg}' for type '{p.type.__name__}'\n"
-           "please try execute this command with '-h' or '--help' to get helps."),
-          file=sys.stderr)
+            (f"invalid literal '{arg}' for type '{p.type.__name__}'\n"
+             "please try execute this command with '-h' or '--help' to get helps."),
+            file=sys.stderr)
         exit(-1)
       if p.allow_multiple:
         params[n].append(v)
@@ -173,7 +185,8 @@ class Dispatcher:
     ret = []
     ps = []
     for n, p in self.positionals:
-      ps.append(f"<{p.var_name}>" if p.required else f"[{p.var_name or n.upper()}]")
+      ps.append(
+          f"<{p.var_name}>" if p.required else f"[{p.var_name or n.upper()}]")
     ret.append(' '.join(ps))
     for arg, (n, p) in filter(lambda x: x[0].startswith('--'), self.keywords.items()):
       ret.append(f"    {p.display(arg, n)}")
@@ -188,16 +201,16 @@ class Dispatcher:
     import __main__ as m
     pn = _get_program_name()
     ret = [
-      "",
-      self.desc,
-      ""
+        "",
+        self.desc,
+        ""
     ] if self.is_subcommand else [
-      f"{pn}: {getattr(m, '__version__', 'UNVERSIONED')}",
-      "",
-      self.desc,
-      "",
-      "Usage:",
-      f"  {pn} [-v | --version | -h | --help]"
+        f"{pn}: {getattr(m, '__version__', 'UNVERSIONED')}",
+        "",
+        self.desc,
+        "",
+        "Usage:",
+        f"  {pn} [-v | --version | -h | --help]"
     ]
     ret.append(self.__generate_usage(pn, sub_names))
     ret.append("")
@@ -206,12 +219,13 @@ class Dispatcher:
       ret.append("")
       ret.append("positional parameters:")
       for n, p in self.positionals:
-        ret.append(f"{p.var_name or n.upper()}:")
-        ret.append(f"  {p.desc}")
-        ret.append(f"  type: {p.type.__name__}")
-        ret.append(f"  required: {p.required}")
+        ret.append(f"  {p.var_name or n.upper()}:")
+        ret.append(f"    {p.desc}")
+        ret.append(f"    type: {p.type.__name__}")
+        ret.append(f"    required: {p.required}")
         if not p.required:
-          ret.append(f"  default: {self.defaults[n]}")
+          ret.append(f"    default: {self.defaults[n]}")
+        ret.append("")
 
     if self.keywords:
       ret.append("")
@@ -219,13 +233,15 @@ class Dispatcher:
       for word, (n, p) in self.keywords.items():
         if not word.startswith('--'):
           continue
-        ret.append(f"{word + (f', -{p.short_name}' if p.short_name else '')}:")
-        ret.append(f"  {p.desc}")
-        ret.append(f"  type: {p.type.__name__}")
-        ret.append(f"  required: {p.required}")
-        ret.append(f"  multiple values: {p.allow_multiple}")
+        ret.append(
+            f"  {word + (f', -{p.short_name}' if p.short_name else '')}:")
+        ret.append(f"    {p.desc}")
+        ret.append(f"    type: {p.type.__name__}")
+        ret.append(f"    required: {p.required}")
+        ret.append(f"    multiple values: {p.allow_multiple}")
         if not p.required:
-          ret.append(f"  default: {self.defaults[n]}")
+          ret.append(f"    default: {self.defaults[n]}")
+        ret.append("")
 
     if self.subdisps:
       if not self.is_subcommand:
@@ -235,7 +251,9 @@ class Dispatcher:
       for sn, sc in self.subdisps.items():
         ret.append("")
         ret.append(f"{sn}:")
-        ret.append(sc.helpmsg(sub_names=sub_names + [sn]).replace('\n', '\n  '))
+        ret.append(sc.helpmsg(sub_names=sub_names +
+                              [sn]).replace('\n', '\n  '))
+        ret.append("")
 
     return '\n'.join(ret)
 
@@ -245,3 +263,22 @@ class Dispatcher:
     """
     dispatcher.is_subcommand = True
     self.subdisps[name] = dispatcher
+
+  def subcommand(self, name, doc):
+    """
+    Add a dispatcher as a sub-command (decorator version)
+    """
+    def _subcommand(func):
+      sub = Dispatcher(func, doc)
+      self.add_subcommand(name, sub)
+      return sub
+    return _subcommand
+
+
+def entrypoint(doc: str):
+  """
+  Simply mark an function as 'entry point'
+  """
+  def _entry(func):
+    return Dispatcher(func, doc)
+  return _entry
